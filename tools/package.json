@@ -1,0 +1,14 @@
+{
+  "name": "gsol-erp-tools",
+  "private": true,
+  "type": "module",
+  "description": "Build/verify tooling for the GSOL ERP database (runs schema + seed in an in-process PostgreSQL via PGlite)",
+  "scripts": {
+    "verify": "node verify.mjs",
+    "docs": "node gen-docs.mjs",
+    "demo": "node build-demo.mjs"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.3.0"
+  }
+}

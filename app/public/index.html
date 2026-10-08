@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GSOL ERP — Global School of Open Learning</title>
+<style>
+:root{--navy:#14284b;--navy2:#1d3a6b;--gold:#b8892b;--bg:#f4f1ea;--card:#fff;--ink:#1c2230;--mute:#667085;--line:#e4dfd3;
+--green:#2e7d4f;--amber:#c28a14;--red:#b3392f;--blue:#2f5f9e}
+*{box-sizing:border-box}body{margin:0;font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg)}
+h1,h2,h3{font-family:Georgia,"Times New Roman",serif;margin:0}
+.app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+nav{background:var(--navy);color:#d9e1f0;padding:18px 0;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{padding:0 20px 16px;border-bottom:1px solid #ffffff22;margin-bottom:8px}
+.brand b{display:block;font:700 22px Georgia,serif;color:#fff;letter-spacing:.5px}.brand span{font-size:11px;color:#c9d4ea;letter-spacing:.4px}
+nav a{display:block;padding:9px 20px;color:#d9e1f0;text-decoration:none;cursor:pointer;border-left:3px solid transparent}
+nav a:hover{background:#ffffff12}nav a.on{background:#ffffff1c;border-left-color:var(--gold);color:#fff}
+nav .sec{padding:14px 20px 4px;font-size:11px;text-transform:uppercase;letter-spacing:1px;color:#8ea0c4}
+main{padding:22px 28px 60px;min-width:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;flex-wrap:wrap}
+.top h1{font-size:26px;color:var(--navy)}.top small{color:var(--mute)}
+.search{display:flex;gap:6px}.search input{width:260px}
+input,select,button{font:inherit;padding:8px 10px;border:1px solid #cfc8b8;border-radius:6px;background:#fff}
+button{background:var(--navy);color:#fff;border-color:var(--navy);cursor:pointer}button.alt{background:#fff;color:var(--navy)}
+.grid{display:grid;gap:14px}.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px}
+.kpi b{display:block;font:700 26px Georgia,serif;color:var(--navy)}.kpi span{color:var(--mute);font-size:12px}
+.two{grid-template-columns:repeat(auto-fit,minmax(340px,1fr))}
+h3{font-size:16px;color:var(--navy);margin-bottom:10px}
+table{width:100%;border-collapse:collapse}th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--mute);padding:6px 8px;border-bottom:1px solid var(--line)}
+td{padding:7px 8px;border-bottom:1px solid #f0ece2;vertical-align:top}tr.link{cursor:pointer}tr.link:hover td{background:#faf7ef}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;white-space:nowrap}
+.b-green,.b-active,.b-conferred,.b-completed,.b-valid{background:#e3f1e8;color:var(--green)}
+.b-yellow,.b-on_leave,.b-deferred,.b-pending_approval,.b-eligibility_check{background:#fbf0d4;color:var(--amber)}
+.b-red,.b-withdrawn,.b-failed{background:#f8e0dd;color:var(--red)}
+.b-alumni,.b-graduated,.b-registered{background:#e2ebf8;color:var(--blue)}.b-other{background:#eee;color:#555}
+.bar{height:8px;background:#eee7d6;border-radius:5px;overflow:hidden;min-width:70px}.bar i{display:block;height:100%;background:var(--navy2)}
+.chart text{font-size:11px;fill:var(--mute)}.chart .v{fill:var(--ink);font-weight:600}
+.legend span{display:inline-flex;align-items:center;gap:5px;margin-right:12px;font-size:12px;color:var(--mute)}.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.muted{color:var(--mute)}.ok{color:var(--green);font-weight:600}.bad{color:var(--red);font-weight:600}
+.drawer{position:fixed;top:0;right:0;width:min(640px,100%);height:100vh;background:var(--bg);box-shadow:-8px 0 30px #0003;overflow:auto;padding:22px;z-index:9;transform:translateX(110%);transition:.2s;visibility:hidden}
+.drawer.open{transform:none;visibility:visible}.x{float:right}
+.note{background:#fff8e4;border:1px solid #ecd9a2;padding:10px 12px;border-radius:8px;color:#6b5513;margin-bottom:14px}
+.scroll{overflow-x:auto}
+@media(max-width:820px){.app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;flex-wrap:wrap;padding:8px}.brand,.sec{display:none}nav a{padding:8px 12px;border:0}main{padding:16px 14px 60px}.search input{width:150px}}
+</style>
+</head>
+<body>
+<div class="app">
+<nav id="nav"></nav>
+<main>
+  <div class="top"><div><h1 id="title">Executive Dashboard</h1><small id="sub"></small></div>
+    <form class="search" id="gs"><input id="gq" placeholder="Search students, courses, certificates…"><button>Search</button></form></div>
+  <div id="view"></div>
+</main>
+</div>
+<aside class="drawer" id="drawer"></aside>
+<script>
+const $=s=>document.querySelector(s),fmt=n=>Number(n).toLocaleString('en-IN'),inr=n=>'₹'+fmt(Math.round(n)),pct=n=>n==null?'—':n+'%';
+const get=async u=>(await fetch(u)).json();
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const badge=s=>`<span class="badge b-${/^(green|yellow|red|active|conferred|completed|valid|on_leave|deferred|pending_approval|eligibility_check|withdrawn|failed|alumni|graduated|registered)$/.test(s)?s:'other'}">${esc(String(s).replace(/_/g,' '))}</span>`;
+const date=d=>d?String(d).slice(0,10):'—';
+const PAL=['#1d3a6b','#b8892b','#2e7d4f','#8a5a9e','#c0572b','#3d8fa5'];
+function bars(rows,{label='label',vals=['n'],names=[],h=190,fmtv=fmt}={}){
+  if(!rows.length)return'<p class="muted">No data</p>';const W=520,pad=34,bw=(W-pad)/rows.length,max=Math.max(...rows.flatMap(r=>vals.map(v=>+r[v])),1),k=vals.length,w=Math.min(34,(bw-8)/k);
+  let s=`<svg class="chart" viewBox="0 0 ${W} ${h+48}" width="100%" role="img">`;
+  rows.forEach((r,i)=>{const x0=pad+i*bw+(bw-w*k)/2;vals.forEach((v,j)=>{const bh=(+r[v]/max)*h;s+=`<rect x="${x0+j*w}" y="${h-bh+20}" width="${w-2}" height="${bh}" rx="3" fill="${PAL[j]}"><title>${esc(r[label])}: ${fmtv(r[v])}</title></rect>`;
+    if(k===1)s+=`<text class="v" x="${x0+w/2-1}" y="${h-bh+16}" text-anchor="middle">${fmtv(r[v])}</text>`});
+    s+=`<text x="${pad+i*bw+bw/2}" y="${h+38}" text-anchor="middle">${esc(String(r[label]).slice(0,11))}</text>`});
+  s+='</svg>';if(k>1)s+='<div class="legend">'+vals.map((v,j)=>`<span><i style="background:${PAL[j]}"></i>${names[j]||v}</span>`).join('')+'</div>';return s}
+const table=(heads,rows)=>`<div class="scroll"><table><tr>${heads.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.join('')||'<tr><td colspan="9" class="muted">No records</td></tr>'}</table></div>`;
+const studentRow=(id,cells)=>`<tr class="link" onclick="openStudent(${id})">${cells.map(c=>`<td>${c}</td>`).join('')}</tr>`;
+
+const views={
+ async dashboard(){const d=await get('/api/dashboard'),k=d.kpis;$('#sub').textContent='Data as of '+d.asOf+' · Open & Distance Learning';
+  const kp=[['Total students',fmt(k.total_students)],['Active students',fmt(k.active_students)],['New admissions (this term)',k.new_admissions],['Applications in pipeline',k.open_applications],['Graduating / pending',k.graduating],['Faculty',k.faculty],['Programmes',k.programmes],['Revenue collected',inr(k.revenue)],['Outstanding fees',inr(k.outstanding_fees)],['Retention',pct(k.retention_pct)],['Completion rate',pct(k.completion_pct)]];
+  return `<div class="grid kpis">${kp.map(([a,b])=>`<div class="card kpi"><b>${b}</b><span>${a}</span></div>`).join('')}</div>
+  <div class="grid two"><div class="card"><h3>Enrolment by programme</h3>${bars(d.byProgramme,{label:'code',vals:['active','graduated','withdrawn'],names:['Active','Graduated','Withdrawn']})}</div>
+  <div class="card"><h3>New enrolments by academic year</h3>${bars(d.byYear)}</div>
+  <div class="card"><h3>Fee collection by term</h3>${bars(d.fees,{vals:['invoiced','collected'],names:['Invoiced','Collected'],fmtv:v=>'₹'+(v/1e5).toFixed(1)+'L'})}</div>
+  <div class="card"><h3>Graduation trend</h3>${bars(d.gradTrend)}</div>
+  <div class="card"><h3>Student geography (top 10)</h3>${bars(d.geo)}</div>
+  <div class="card"><h3>Grade distribution (all finalised courses)</h3>${bars(d.grades)}</div></div>`},
+ async programmes(){const r=await get('/api/programmes');$('#sub').textContent='Programme dashboard';
+  return `<div class="grid two">${r.map(p=>`<div class="card"><h3>${esc(p.name)}</h3><p class="muted">${esc(p.level)} · ${p.total_credits} credits · ${p.duration_months/12} yrs · ${esc(p.mode_of_study||'ODL')}</p>
+  <table>${[['Total students',p.total_students],['Active',p.active_students],['New this term',p.new_students],['Graduates',p.graduates],['Average CGPA',p.average_cgpa],['At-risk students',p.at_risk_students],['Courses in curriculum',p.courses],['Faculty',p.faculty],['Outstanding fees',inr(p.outstanding_fees)]].map(([a,b])=>`<tr><td class="muted">${a}</td><td><b>${b??'—'}</b></td></tr>`).join('')}</table></div>`).join('')}</div>`},
+ async students(){$('#sub').textContent='Student Information System';
+  const prog=['','DIP-TH','BTH','MACS','MDIV'],st=['','active','on_leave','deferred','withdrawn','alumni'];
+  window._after=()=>{const f=()=>load();['sq','sp','ss'].forEach(i=>$('#'+i).addEventListener('input',f));f()};
+  return `<div class="card"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px"><input id="sq" placeholder="Name or student ID (GSOL-2024-0011)">
+  <select id="sp">${prog.map(p=>`<option value="${p}">${p||'All programmes'}</option>`).join('')}</select><select id="ss">${st.map(p=>`<option value="${p}">${p?p.replace('_',' '):'All statuses'}</option>`).join('')}</select></div><div id="slist"></div></div>`;
+  async function load(){const r=await get(`/api/students?q=${encodeURIComponent($('#sq').value)}&programme=${$('#sp').value}&status=${$('#ss').value}`);
+   if(!$('#slist'))return;$('#slist').innerHTML=table(['Student ID','Name','Programme','Status','Progress','CGPA','Risk'],r.map(s=>studentRow(s.id,[s.student_no,esc(s.name),s.programme||'—',badge(s.status_code),`<div class="bar"><i style="width:${s.completion_pct||0}%"></i></div>`,s.cgpa??'—',s.risk==='-'?'—':badge(s.risk)])))}},
+ async engagement(){const d=await get('/api/engagement');$('#sub').textContent='ODL engagement risk indicator (Moodle activity + gradebook) — decision support, not automatic action';
+  const c=Object.fromEntries(d.summary.map(x=>[x.label,x.n]));
+  return `<div class="grid kpis"><div class="card kpi"><b style="color:var(--green)">${c.green||0}</b><span>🟢 Active enrolments</span></div><div class="card kpi"><b style="color:var(--amber)">${c.yellow||0}</b><span>🟡 Needs attention</span></div><div class="card kpi"><b style="color:var(--red)">${c.red||0}</b><span>🔴 At risk</span></div></div>
+  <div class="card"><h3>Enrolments needing follow-up</h3>${table(['Student','Course','Progress','Days inactive','Missed','Failed','Level'],d.rows.map(r=>studentRow(r.student_id,[`${esc(r.name)}<br><span class="muted">${r.student_no}</span>`,`${r.code} ${esc(r.title)}`,pct(r.progress_pct),r.days_inactive,r.missed_assessments,r.failed_assessments,badge(r.risk_level)])))}</div>`},
+ async finance(){const d=await get('/api/finance');$('#sub').textContent='Fees, payments, scholarships';
+  return `<div class="grid two"><div class="card"><h3>Invoiced vs collected by programme</h3>${bars(d.byProgramme,{label:'code',vals:['invoiced','collected'],names:['Invoiced','Collected'],fmtv:v=>'₹'+(v/1e5).toFixed(1)+'L'})}</div>
+  <div class="card"><h3>Payment methods</h3>${table(['Method','Receipts','Amount'],d.methods.map(m=>`<tr><td>${esc(m.label.replace('_',' '))}</td><td>${m.n}</td><td>${inr(m.amount)}</td></tr>`))}<h3 style="margin-top:14px">Scholarship awards</h3>${table(['Scheme','Awards'],d.scholarships.map(s=>`<tr><td>${esc(s.name)}</td><td>${s.awards}</td></tr>`))}</div></div>
+  <div class="card" style="margin-top:14px"><h3>Largest overdue balances</h3>${table(['Student','Net payable','Paid','Outstanding','Overdue'],d.overdue.map(r=>studentRow(r.student_id,[`${esc(r.name)}<br><span class="muted">${r.student_no}</span>`,inr(r.net_payable),inr(r.amount_paid),inr(r.outstanding_balance),`<b class="bad">${inr(r.overdue_amount)}</b>`])))}</div>`},
+ async graduation(){const r=await get('/api/graduation');$('#sub').textContent='Graduation eligibility = credits + required courses + CGPA + fees + dissertation (computed in the database)';
+  const why=e=>e.eligible?'<span class="ok">Eligible</span>':[e.credits_earned+e.credits_transferred<e.credits_required&&`credits ${e.credits_earned}/${e.credits_required}`,e.required_courses_missing>0&&`${e.required_courses_missing} required course(s) missing`,e.cgpa<e.min_cgpa&&`CGPA ${e.cgpa}<${e.min_cgpa}`,e.outstanding_fees>0&&`fees due ${inr(e.outstanding_fees)}`,!e.dissertation_ok&&'dissertation pending'].filter(Boolean).map(x=>`<span class="bad">${x}</span>`).join('<br>');
+  return `<div class="card">${table(['Student','Programme','Status','CGPA','Graduation date','Eligibility check'],r.map(g=>studentRow(g.student_id,[`${esc(g.name)}<br><span class="muted">${g.student_no}</span>`,g.programme,badge(g.status),g.final_cgpa??'—',date(g.graduation_date),why(g.eligibility)])))}</div>`},
+ async alumni(){const r=await get('/api/alumni');$('#sub').textContent='Alumni directory (created automatically at graduation)';
+  return `<div class="card">${table(['Year','Programme','Name','Ministry','Church','Country'],r.map(a=>`<tr><td>${a.graduation_year}</td><td>${a.programme}</td><td>${esc(a.name)}</td><td>${esc(a.current_ministry||'—')}</td><td>${esc(a.church||'—')}</td><td>${esc(a.country||'—')}</td></tr>`))}</div>`},
+ async registration(){$('#sub').textContent='Course registration rule: prerequisites enforced by the database';
+  window._after=()=>{$('#pf').onsubmit=async e=>{e.preventDefault();const r=await get(`/api/prereq?student=${encodeURIComponent($('#ps').value)}&course=${encodeURIComponent($('#pc').value)}`);
+   $('#pr').innerHTML=r.error?`<p class="bad">${r.error}</p>`:`<h3>${r.course.code} — ${esc(r.course.title)}</h3><p>${r.eligible?'<span class="ok">✔ Eligible to register</span>':'<span class="bad">✘ Registration blocked — prerequisites not completed</span>'}</p>${r.prereqs.length?table(['Group (OR within group)','Prerequisite','Min grade point','Satisfied'],r.prereqs.map(p=>`<tr><td>${p.group_no}</td><td>${p.code} ${esc(p.title)}</td><td>${p.min_grade_point}</td><td>${p.satisfied?'<span class="ok">yes</span>':'<span class="bad">no</span>'}</td></tr>`)):'<p class="muted">No prerequisites.</p>'}`}};
+  return `<div class="card"><p class="muted">Try <b>GSOL-2023-0001</b> with EX501, OT301, DIS599 or PT501 — or pick a first-term student and ask for an advanced course.</p><form id="pf" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><input id="ps" value="GSOL-2026-0001" placeholder="Student ID"><input id="pc" value="EX501" placeholder="Course code"><button>Check eligibility</button></form><div id="pr"></div></div>`},
+ async verify(){$('#sub').textContent='Public certificate verification (no login)';
+  window._after=()=>{$('#vf').onsubmit=async e=>{e.preventDefault();const r=await get('/api/verify?code='+encodeURIComponent($('#vc').value));
+   $('#vr').innerHTML=r.error?`<p class="bad">✘ ${r.error}</p>`:`<p>${r.valid?'<span class="ok">✔ Valid certificate</span>':'<span class="bad">Revoked / superseded</span>'}</p>${table(['Certificate','Type','Holder','Programme','Issued'],[`<tr><td>${r.certificate_no}</td><td>${r.cert_type.replace('_',' ')}</td><td>${esc(r.holder)}</td><td>${esc(r.programme||'—')}</td><td>${date(r.issued_on)}</td></tr>`])}`}};
+  return `<div class="card"><form id="vf" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"><input id="vc" value="GSOL-2025-C0001" style="width:300px" placeholder="Certificate number or QR code"><button>Verify</button></form><div id="vr"></div></div>`},
+ async rbac(){const r=await get('/api/rbac'),roles=[...new Set(r.map(x=>x.role))];$('#sub').textContent='Role-based access control — resource × action × scope';
+  return `<div class="grid two">${roles.map(ro=>`<div class="card"><h3>${ro.replace(/_/g,' ')}</h3>${table(['Resource','Actions','Scope'],r.filter(x=>x.role===ro).map(x=>`<tr><td>${x.resource}</td><td>${x.actions.replace(/,/g,', ')}</td><td>${badge(x.scope==='all'?'registered':'other').replace(/>.*</,'>'+x.scope+'<')}</td></tr>`))}</div>`).join('')}</div>`},
+ async audit(){const r=await get('/api/audit');$('#sub').textContent='Append-only audit log (UPDATE/DELETE blocked by trigger)';
+  return `<div class="card">${table(['When','Action','Table','Record'],r.map(a=>`<tr><td>${new Date(a.occurred_at).toLocaleString()}</td><td>${a.action}</td><td>${a.table_name}</td><td>${a.record_id}</td></tr>`))}</div>`}
+};
+const NAV=[['Overview'],['dashboard','Executive Dashboard'],['programmes','Programmes'],['Academic'],['students','Students'],['registration','Course Registration'],['engagement','ODL Engagement'],['graduation','Graduation'],['alumni','Alumni'],['Operations'],['finance','Finance'],['verify','Verify Certificate'],['rbac','Roles & Permissions'],['audit','Audit Log']];
+const TITLES=Object.fromEntries(NAV.filter(n=>n.length>1).map(n=>[n[0],n[1]]));
+$('#nav').innerHTML='<div class="brand"><b>GSOL</b><span>GLOBAL SCHOOL OF OPEN LEARNING</span></div>'+NAV.map(n=>n.length===1?`<div class="sec">${n[0]}</div>`:`<a data-v="${n[0]}" href="#${n[0]}">${n[1]}</a>`).join('');
+async function route(){const v=(location.hash||'#dashboard').slice(1);const fn=views[v]||views.dashboard;document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.dataset.v===v));
+  $('#title').textContent=TITLES[v]||'Executive Dashboard';window._after=null;$('#view').innerHTML='<p class="muted">Loading…</p>';try{$('#view').innerHTML=await fn();window._after&&window._after()}catch(e){$('#view').innerHTML='<p class="bad">'+esc(e.message)+'</p>'}}
+addEventListener('hashchange',route);route();
+$('#gs').onsubmit=async e=>{e.preventDefault();const r=await get('/api/search?q='+encodeURIComponent($('#gq').value));$('#title').textContent='Search results';$('#sub').textContent='Global search across students, courses, faculty, applications, receipts, certificates, dissertations';
+  $('#view').innerHTML=`<div class="card">${table(['Type','Match','Detail'],r.map(x=>`<tr class="${x.entity==='student'?'link':''}" ${x.entity==='student'?`onclick="openStudent(${x.entity_id})"`:''}><td>${badge(x.entity)}</td><td>${esc(x.label)}</td><td class="muted">${esc(x.detail||'')}</td></tr>`))}</div>`};
+async function openStudent(id){const d=await get('/api/student?id='+id),s=d.student,dr=$('#drawer');dr.classList.add('open');
+  dr.innerHTML=`<button class="alt x" onclick="$('#drawer').classList.remove('open')">Close</button><h2>${esc(s.first_name)} ${esc(s.last_name)}</h2><p class="muted">${s.student_no} · ${badge(s.status_code)} · admitted ${date(s.admitted_on)}<br>${esc(s.church_name||'')} ${s.denomination?'('+esc(s.denomination)+')':''} · ${esc(s.state||'')} ${esc(s.country||'')}<br>Advisor: ${esc(s.advisor||'—')}</p>
+  ${d.progress.map(p=>{const e=p.eligibility;return`<div class="card" style="margin:12px 0"><h3>${esc(p.programme_name)} ${badge(p.programme_status)}</h3><div class="bar" style="height:12px"><i style="width:${p.completion_pct}%"></i></div>
+  <p>${p.credits_earned+p.credits_transferred} / ${p.credits_required} credits (${p.completion_pct}%) · CGPA <b>${p.cgpa??'—'}</b> · ${p.courses_completed} completed, ${p.courses_in_progress} in progress, ${p.courses_failed} failed${p.credits_transferred>0?` · <span class="muted">${p.credits_transferred} transferred</span>`:''}</p>
+  <p>Graduation: ${e.eligible?'<span class="ok">eligible</span>':'<span class="muted">not yet eligible</span>'}${e.outstanding_fees>0?` · <span class="bad">fees due ${inr(e.outstanding_fees)}</span>`:''}</p></div>`}).join('')}
+  ${d.finance?`<div class="card"><h3>Finance</h3><p>Net payable ${inr(d.finance.net_payable)} · Paid ${inr(d.finance.amount_paid)} · <b>Outstanding ${inr(d.finance.outstanding_balance)}</b> · Scholarship ${inr(d.finance.scholarship)}</p></div>`:''}
+  <div class="card" style="margin-top:12px"><h3>Courses</h3>${table(['Course','Term','Status','Mark','Grade','LMS'],d.courses.map(c=>`<tr><td>${c.code} ${esc(c.title)}</td><td>${c.term} ${c.year}</td><td>${badge(c.status)}</td><td>${c.final_pct??c.current_pct??'—'}</td><td>${c.grade_letter||'—'}</td><td>${c.progress_pct!=null?pct(c.progress_pct):'—'} ${c.risk_level?badge(c.risk_level):''}</td></tr>`))}</div>
+  ${d.gpa.length?`<div class="card" style="margin-top:12px"><h3>Semester GPA</h3>${bars(d.gpa.map(g=>({label:g.term_label,n:g.semester_gpa})),{h:110,fmtv:v=>(+v).toFixed(2)})}</div>`:''}
+  ${d.certs.length?`<div class="card" style="margin-top:12px"><h3>Certificates</h3>${table(['Number','Type','Issued','Verify code'],d.certs.map(c=>`<tr><td>${c.certificate_no}</td><td>${c.cert_type.replace('_',' ')}</td><td>${date(c.issued_on)}</td><td>${c.verification_code}</td></tr>`))}</div>`:''}
+  <div class="card" style="margin-top:12px"><h3>Status history</h3>${d.history.map(h=>`${h.from_code||'—'} → <b>${h.to_code}</b> <span class="muted">${date(h.on)}</span>`).join('<br>')}</div>`}
+</script>
+</body>
+</html>
