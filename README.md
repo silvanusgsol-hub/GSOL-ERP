@@ -49,7 +49,7 @@ tools/demo.sh                                # builds DB "gsol" (schema + demo d
 
 | Path | Purpose |
 |---|---|
-| `database/schema.sql` | 83 tables, 6 views, lifecycle functions & triggers (prerequisites, grading, graduation, audit) |
+| `database/schema.sql` | 86 tables, 6 views, lifecycle functions & triggers (prerequisites, grading, graduation, audit) |
 | `database/seed/01–07_*.sql` | Realistic synthetic data: 4 programmes, 25 courses, 176 students, 530 invoices, 2,500 exam results, 33 graduates |
 | `app/` | Read-only REST API + responsive dashboard (Node + `pg`, no framework) |
 | `docs/ARCHITECTURE.md` | Architecture, module map, lifecycle, RBAC, roadmap |
