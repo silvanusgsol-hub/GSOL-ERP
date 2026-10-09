@@ -7,7 +7,10 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import pg from 'pg';
 
-const pool = new pg.Pool({ max: 6 });
+const pool = new pg.Pool({
+  max: 6,
+  ssl: { rejectUnauthorized: false }
+});
 const PUBLIC = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const q = async (sql, params = []) => (await pool.query(sql, params)).rows;
 const one = async (sql, params = []) => (await q(sql, params))[0] ?? null;
